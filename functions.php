@@ -5,6 +5,7 @@
 
 add_action( 'wp_dashboard_setup', 'add_dashboard_widgets' );
 add_action( 'admin_enqueue_scripts', 'enqueue_scripts' );
+add_action( 'wp_ajax_msp_admin_sync_vendor', 'msp_admin_sync_vendor' );
 
 function enqueue_scripts( $hook ){
     wp_enqueue_script('admin', plugins_url( 'admin.js', __FILE__ ));
