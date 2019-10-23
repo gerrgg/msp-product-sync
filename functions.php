@@ -3,15 +3,16 @@
 * Plugin Name: MSP Product Sync
 */
 
-add_action( 'wp_dashboard_setup', 'add_dashboard_widgets' );
-add_action( 'admin_enqueue_scripts', 'enqueue_scripts' );
+add_action( 'wp_dashboard_setup', 'sync_add_dashboard_widgets' );
+add_action( 'admin_enqueue_scripts', 'sync_enqueue_scripts' );
 add_action( 'wp_ajax_msp_admin_sync_vendor', 'msp_admin_sync_vendor' );
+// add_action( 'admin_post_msp_admin_sync_vendor', 'msp_admin_sync_vendor' );
 
-function enqueue_scripts( $hook ){
-    wp_enqueue_script('admin', plugins_url( 'admin.js', __FILE__ ));
+function sync_enqueue_scripts( $hook ){
+    wp_enqueue_script('sync-admin', plugins_url( 'admin.js', __FILE__ ));
 }
 
-function add_dashboard_widgets(){
+function sync_add_dashboard_widgets(){
     /**
      * Setup dashboard widget
      */
@@ -37,7 +38,7 @@ function msp_add_update_stock_widget(){
     $today = date('m-d-y');
     $last_sync = get_option( 'msp_helly_hansen_last_sync' );
     ?>
-    <form id="msp_add_update_stock_form" method="post" action="<?php echo admin_url( 'admin-ajax.php' ) ?>">
+    <form id="msp_add_update_stock_form" method="post" action="<?php echo admin_url( 'admin-post.php' ) ?>">
         <?php if( $last_sync != $today ) : ?>
             <h1 style="color: red;">HELLY HANSEN NEEDS TO BE SYNCED <?php echo $last_sync ?></h1>
         <?php endif; ?>
@@ -98,7 +99,8 @@ function msp_get_data_and_sync( $vendor ){
 
     $count = 0;
 
-    $data = file_get_contents( $vendor['src'] );
+    $data = wp_remote_get( $vendor['src'] )['body'];
+
     if( ! empty( $data ) ){
         foreach( msp_csv_to_array( $data ) as $item ){
             // sku_index and stock_index are the position of the data in the array,
@@ -106,12 +108,14 @@ function msp_get_data_and_sync( $vendor ){
                 if( ! empty( $item[ $vendor['sku_index'] ] ) ){
                     $id = msp_get_product_id_by_sku( $item[ $vendor['sku_index'] ] );
                     if( ! empty( $id ) ){
-                        msp_update_stock( $id, $item[ $vendor['stock_index'] ], $item[ $vendor['next_delivery'] ], $vendor['name'] );
+                        msp_update_stock( $id, $item[ $vendor['stock_index'] ], $item[ $vendor['next_delivery'] ] );
                         $count++;
                     }
                 }
             }
         }
+    } else {
+        echo '$data is empty';
     }
 
     $time_elapsed_secs = microtime(true) - $start;
@@ -168,6 +172,7 @@ function msp_update_stock( $id, $stock, $next_delivery){
             $product->set_backorders('notify');
             // Notify the customer of backorder
             update_post_meta( $id, 'msp_sync_next_delivery', $next_delivery );
+
         } else {
             delete_post_meta( $id, 'msp_sync_next_delivery');
             $product->set_backorders('no');
