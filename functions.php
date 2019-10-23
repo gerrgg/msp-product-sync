@@ -42,6 +42,7 @@ function msp_add_update_stock_widget(){
         <?php if( $last_sync != $today ) : ?>
             <h1 style="color: red;">HELLY HANSEN NEEDS TO BE SYNCED <?php echo $last_sync ?></h1>
         <?php endif; ?>
+
         <p>
             <label>Vendor: </label>
             <select name="vendor" >
@@ -160,23 +161,17 @@ function msp_update_stock( $id, $stock, $next_delivery){
      * @param int $stock - Stock of item
      * @param string $next_delivery - The date the manufacturer expects to get more product.
      */
-    $product = wc_get_product( $id );
-    $stock_status = ( $stock > 0 ) ? 'instock' : 'outofstock';
 
-    if( ! empty( $product ) ){
-        $product->set_manage_stock( true );
-        $product->set_stock_status( $stock_status );
-        $product->set_stock_quantity( $stock );
+     // NEVER EVER USE WC_PRODUCT object, update post meta!
+    update_post_meta( $id, '_manage_stock', 'yes' );
+    update_post_meta( $id, '_stock', $stock );
 
-        if( $stock == 0 ){
-            $product->set_backorders('notify');
-            // Notify the customer of backorder
-            update_post_meta( $id, 'msp_sync_next_delivery', $next_delivery );
-
-        } else {
-            delete_post_meta( $id, 'msp_sync_next_delivery');
-            $product->set_backorders('no');
-        }
+    if( $stock > 0 ){
+        update_post_meta( $id, '_stock_status', 'instock' );
+    } else {
+        update_post_meta( $id, '_stock_status', 'onbackorder' );
+        update_post_meta( $id, '_backorders', 'notify' );
+        update_post_meta( $id, 'msp_sync_next_delivery', $next_delivery );
     }
 }
 
@@ -190,11 +185,8 @@ function msp_get_availability( $text, $_product ){
     $new_date = preg_replace("/(\d+)\D+(\d+)\D+(\d+)/","$2/$1/$3", $next_delivery);
 
     if ( $_product->managing_stock() && $_product->is_on_backorder( 1 ) && ! empty( $new_date ) ) {
-        $text = "On backorder, item estimated to ship $new_date*";
+        $text = "On backorder, item estimated to ship <strong>$new_date*</strong>";
     }
 
     return $text;
 }
-?>
-
-
