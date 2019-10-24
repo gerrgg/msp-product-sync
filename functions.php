@@ -37,9 +37,11 @@ function msp_add_update_stock_widget(){
      */
     $today = date('m-d-y');
     $last_sync = get_option( 'msp_helly_hansen_last_sync' );
+    $user = wp_get_current_user();
     ?>
     <form id="msp_add_update_stock_form" method="post" action="<?php echo admin_url( 'admin-post.php' ) ?>">
         <?php if( $last_sync != $today ) : ?>
+            <h1><?php echo $user->user_firstname ?>, I need your help...</h1>
             <h1 style="color: red;">HELLY HANSEN NEEDS TO BE SYNCED <?php echo $last_sync ?></h1>
         <?php endif; ?>
 
@@ -185,7 +187,7 @@ function msp_get_availability( $text, $_product ){
     $new_date = preg_replace("/(\d+)\D+(\d+)\D+(\d+)/","$2/$1/$3", $next_delivery);
 
     if ( $_product->managing_stock() && $_product->is_on_backorder( 1 ) && ! empty( $new_date ) ) {
-        $text = "On backorder, item estimated to ship <strong>$new_date*</strong>";
+        $text = "On backorder, item estimated to ship on or before  <strong>$new_date*</strong>";
     }
 
     return $text;
