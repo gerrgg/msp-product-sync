@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 
 /*
 * Plugin Name: MSP Product Sync
-* Version: 0.1
+* Version: 0.2
 */
 
 class Sync{
@@ -268,11 +268,9 @@ class Sync{
          */
         $str = "ID: $id |";
         foreach( $updates as $meta_key => $meta_value ){
-            if( ! empty( $meta_key ) && ! empty( $meta_value ) ){
-                $str .= sprintf( " %s => %s | ",$meta_key, $meta_value );
-                if( false == $this->flags['dry_run'] ){
-                    update_post_meta( $id, $meta_key, $meta_value );
-                }
+            $str .= sprintf( " %s => %s | ",$meta_key, $meta_value );
+            if( false == $this->flags['dry_run'] ){
+                update_post_meta( $id, $meta_key, $meta_value );
             }
         }
         echo $str . '<br>';
