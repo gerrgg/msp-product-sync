@@ -7,10 +7,41 @@ defined( 'ABSPATH' ) || exit;
 */
 
 class Sync{
+    /**
+     * In construct, we make the relevant changes to the $flags array
+     * Then, once we obtain the CSV, match an ID to a sku. We finally loop through our
+     * $flags array checked if enabled and calling approprate callback if needed.
+     */
     public $flags = array(
-            'stock' => false,
-            'dims' => false,
-            'price' => false,
+            'stock' => array(
+                'enabled' => false,
+                'callback' => 'msp_update_stock'
+            ),
+            'dims' => array(
+                'enabled' => false,
+                'callback' => ''
+            ),
+            'price' => array(
+                'enabled' => false,
+                'modifier' => 0,
+                'callback' => ''
+            ),
+            'dry_run' => false,
+    );
+
+    public $column_mappings = array(
+        'portwest' => array(
+            'sku' => 1,
+            'stock' => 8,
+            'price' => 3,
+            'next_delivery' => 9
+        ),
+        'helly_hansen' => array(
+            'sku' => 16,
+            'stock' => 7,
+            'price' => 10,
+            'next_delivery' => 9
+        ),
     );
 
 
@@ -87,14 +118,14 @@ class Sync{
             <input name="actions[dims]" id="dims" type="checkbox" value="1" />Weight/dimensions<br>
             <input name="actions[price]" id="price" type="checkbox" value="1" />Price
             <input type="number" id="price-modifier" name="actions[price-modifier]" style="width: 50%" placeholder="0.6 = 40% markup"><br>
-            <input type="checkbox" id="dry-run" name="actions[dry-run]" value="1">DRY RUN (<b>nothing changes</b> while checked)
+            <input type="checkbox" id="dry_run" name="actions[dry_run]" value="1">DRY RUN (<b>nothing changes</b> while checked)
         </p>
 
         
 
         <span class="feedback" style="font-weight: 600; font-color: red; font-size: 18px; "></span>
         <input type="hidden" name="action" value="msp_admin_sync_vendor" />
-        <button id="submit_update_vendor" type="button" class="button button-primary" style="margin-top: 1rem;">Submit Vendor!</button>
+        <button id="submit_update_vendor" type="submit" class="button button-primary" style="margin-top: 1rem;">Submit Vendor!</button>
     </form>
     <?php
     }
@@ -103,25 +134,23 @@ class Sync{
     /**
      * This function puts together the data based on prebuilt rules.
      */
-
-        // ob_start();
         $data = array(
             'name' => $_POST['vendor'],
             'src'    => $_POST['url'],
-            'sku_index' => ( $_POST['vendor'] == 'portwest' ) ? 1 : 16,
-            'stock_index' => ( $_POST['vendor'] == 'portwest' ) ? 8 : 7,
-            'price_index' => ( $_POST['vendor'] == 'portwest' ) ? 3 : 10,
-            'next_delivery' => 9
         );
 
-        $GLOBALS['dry_run'] = ( isset( $_POST['actions']['dry-run'] ) );
+        foreach( $_POST['actions'] as $k => $v ){
+            if( $v == '1' && $k != 'dry_run' ){
+                $this->flags[$k]['enabled'] = true;
+            }
+        }
 
-        // Admin feedback as to manual syncs (Specifically helly hansen)
+        $this->flags['dry_run'] = ( isset( $_POST['actions']['dry_run'] ) );
+
+        // do this at the end
         update_option('msp_'. $_POST['vendor'] .'_last_sync', date('m-d-y'));
 
         $this->sync_with_data( $data );
-        // $html = ob_get_clean();
-        // echo $html;
         wp_die();
     }
 
@@ -131,32 +160,44 @@ class Sync{
          * and updates accordingly.
          * @param array $vendor - The vendor, data source, and column information
          */
+
         $start = microtime(true);
 
         $count = 0;
 
         $data = wp_remote_get( $vendor['src'] )['body'];
-        
+        $column = $this->column_mappings[ $vendor['name'] ];
+
         if( ! empty( $data ) ){
             foreach( $this->msp_csv_to_array( $data ) as $item ){
-                // sku_index and stock_index are the position of the data in the array,
-                // We NEED to check for flags here.
-                if( isset( $item[ $vendor['sku_index'] ] ) && isset( $item[ $vendor[ 'stock_index'] ] ) ){
-                    if( ! empty( $item[ $vendor['sku_index'] ] ) ){
-                        $id = $this->msp_get_product_id_by_sku( $item[ $vendor['sku_index'] ] );
-                        if( ! empty( $id ) ){
-                            $this->msp_update_stock( $id, $item[ $vendor['stock_index'] ], $item[ $vendor['next_delivery'] ] );
-                            $count++;
+                if( isset( $item[ $column[ 'sku' ] ] ) ){
+                    $id = $this->msp_get_product_id_by_sku( $item[ $column['sku'] ] );
+                    if( ! empty( $id ) ){
+
+                        // Loop throught flags, each flag will have a callback to a specific function
+                        // Perform each function checked off.
+
+                        foreach( $this->flags as $k => $v ){
+                            $callback = $this->flags[$k]['callback'];
+
+                            if( ! empty( $callback ) ){
+                                // OPTIMIZE: Optimize $item by looping through $column mappings and only grabbing
+                                // relevant columns of information.
+                                $this->$callback( $id, $item );
+                            }
                         }
+                        // Doesn't particularly mean the product was actually updated.
+                        $count++;
                     }
                 }
+
             }
         } else {
             echo '$data is empty';
         }
 
         $time_elapsed_secs = microtime(true) - $start;
-        $is_dry_run = ( $GLOBALS['dry_run'] ) ? 'Yes' : "No";
+        $is_dry_run = ( $this->flags['dry_run'] ) ? 'Yes' : "No";
 
         echo '<h2>Report</h2>';
         echo "Dry run:" . $is_dry_run . '<br>';
@@ -192,7 +233,7 @@ class Sync{
         return $s;
     }
     
-    private function msp_update_stock( $id, $stock, $next_delivery){
+    private function msp_update_stock( $id, $item ){
         /**
          * Checks the ID, sets stock information and puts product on back order if at 0 but has $next_delivery
          * @param int $id
@@ -201,6 +242,10 @@ class Sync{
          */
     
          // NEVER EVER USE WC_PRODUCT object, update post meta!
+
+         $stock = $item[$this->column_mappings['portwest']['stock']];
+         $next_delivery = $item[$this->column_mappings['portwest']['next_delivery']];
+
         $updates = array(
             '_manage_stock' => 'yes',
             '_stock' => $stock,
@@ -210,7 +255,7 @@ class Sync{
             $updates['_stock_status'] = 'instock';
         } else {
             $updates['_stock_status'] = 'onbackorder';
-            $updates['_backorders'] = 'onbackorder';
+            $updates['_backorders'] = 'notify';
             $updates['msp_sync_next_delivery'] = $next_delivery;
         }
 
@@ -225,7 +270,7 @@ class Sync{
         foreach( $updates as $meta_key => $meta_value ){
             if( ! empty( $meta_key ) && ! empty( $meta_value ) ){
                 $str .= sprintf( " %s => %s | ",$meta_key, $meta_value );
-                if( false == $GLOBALS['dry_run'] ){
+                if( false == $this->flags['dry_run'] ){
                     update_post_meta( $id, $meta_key, $meta_value );
                 }
             }
@@ -252,4 +297,3 @@ class Sync{
 } /** End sync class */
 
 new Sync();
-

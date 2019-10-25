@@ -19,12 +19,13 @@ jQuery( function( $ ){
                 $('.feedback').html("Helly Hansen requires a url. <br>Please go to <a href='https://app.ivendix.com/'>iVendix</a> and enter the url emailed to you; above. Thanks!");
             }
             
-        }).on( 'click', '#dry-run', function( e ){
-            let dry_run = $(e.target);
-            let button_type = ( dry_run.is(':checked') ) ? 'submit' : 'button';
-            submit.attr('type', button_type);
+        }).on( 'click', '#dry_run', function( e ){
+            // THIS IS FOR RUNNING DRY RUNS IN ADMIN POST INSTEAD OF AJAX
+            // let dry_run = $(e.target);
+            // let button_type = ( dry_run.is(':checked') ) ? 'submit' : 'button';
+            // submit.attr('type', button_type);
         })
-        .on( 'click', submit, function(){
+        .on( 'click', 'button', function(){
             if( submit.attr('type') == 'button' ){
                 $('.feedback').html( 'Request Sent!, Thanks.<br>' );
                 data.vendor = $(select).val();
