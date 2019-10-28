@@ -60,8 +60,6 @@ class Sync{
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_js' ) );
         add_action( 'wp_ajax_msp_admin_sync_vendor', array( $this, 'process' ) );
         add_action( 'admin_post_msp_admin_sync_vendor', array( $this, 'process' ) );
-        add_filter( 'woocommerce_get_availability_text', 'msp_get_availability', 100, 2 );
-
     }
 
     public function admin_js(){
@@ -303,21 +301,23 @@ class Sync{
 
     }
 
-    private function msp_get_availability( $text, $_product ){
-        /**
-         * Determine how to format date based on vendor
-         */
-    
-        $next_delivery = get_post_meta($_product->get_id(), 'msp_sync_next_delivery', true);
-        $new_date = preg_replace("/(\d+)\D+(\d+)\D+(\d+)/","$2/$1/$3", $next_delivery);
-    
-        if ( $_product->managing_stock() && $_product->is_on_backorder( 1 ) && ! empty( $new_date ) ) {
-            $text = "On backorder, item estimated to ship on or before  <strong>$new_date*</strong>";
-        }
-    
-        return $text;
-    }
-
 } /** End sync class */
 
 new Sync();
+
+add_filter( 'woocommerce_get_availability_text', 'msp_get_availability', 100, 2 );
+
+function msp_get_availability( $text, $_product ){
+    /**
+     * Determine how to format date based on vendor
+     */
+
+    $next_delivery = get_post_meta($_product->get_id(), 'msp_sync_next_delivery', true);
+    $new_date = preg_replace("/(\d+)\D+(\d+)\D+(\d+)/","$2/$1/$3", $next_delivery);
+
+    if ( $_product->managing_stock() && $_product->is_on_backorder( 1 ) && ! empty( $new_date ) ) {
+        $text = "On backorder, item estimated to ship on or before  <strong>$new_date*</strong>";
+    }
+
+    return $text;
+}
