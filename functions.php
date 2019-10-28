@@ -99,7 +99,7 @@ class Sync{
             <h1><span style="color: red;"><?php echo $user->user_firstname ?></span>, I need your help...😬💗</h1>
             <h2 style="color: red;">HELLY HANSEN <b><i>NEEDS</i></b> TO BE SYNCED</h2>
             <h4><b>Last Sync: <?php echo $last_sync?></b></h4>
-            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/checkInventory">Check Inventory</a></h4>
+            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/checkInventory" target="_blank">  Check Inventory</a></h4>
 
             <h1>How do I Sync HELLY HANSEN?</h1>
         <iframe width="400" height="200" src="https://www.youtube.com/embed/zH1hkzSxOLs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -202,6 +202,7 @@ class Sync{
             echo '$data is empty';
         }
 
+        // CONVERT to generate_report(); function
         $time_elapsed_secs = microtime(true) - $start;
         $is_dry_run = ( $this->flags['dry_run'] ) ? 'Yes' : "No";
 
