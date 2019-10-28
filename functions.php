@@ -19,12 +19,13 @@ class Sync{
             ),
             'dims' => array(
                 'enabled' => false,
-                'callback' => ''
+                'callback' => 'msp_update_dims'
             ),
             'price' => array(
                 'enabled' => false,
                 'modifier' => 0,
-                'callback' => ''
+                'callback' => '',
+                'map_our_cost' => false // An extra checkbox for mapping our cost and making determinations.
             ),
             'dry_run' => false,
     );
@@ -34,7 +35,11 @@ class Sync{
             'sku' => 1,
             'stock' => 8,
             'price' => 3,
-            'next_delivery' => 9
+            'next_delivery' => 9,
+            'length' => 10,
+            'width' => 11,
+            'height' => 12,
+            'weight' => 14
         ),
         'helly_hansen' => array(
             'sku' => 16,
@@ -43,6 +48,9 @@ class Sync{
             'next_delivery' => 9
         ),
     );
+
+    public $vendor;
+    public $url;
 
 
     function __construct(){
@@ -91,6 +99,7 @@ class Sync{
             <h1><span style="color: red;"><?php echo $user->user_firstname ?></span>, I need your help...😬💗</h1>
             <h2 style="color: red;">HELLY HANSEN <b><i>NEEDS</i></b> TO BE SYNCED</h2>
             <h4><b>Last Sync: <?php echo $last_sync?></b></h4>
+            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/checkInventory">Check Inventory</a></h4>
 
             <h1>How do I Sync HELLY HANSEN?</h1>
         <iframe width="400" height="200" src="https://www.youtube.com/embed/zH1hkzSxOLs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -134,10 +143,6 @@ class Sync{
     /**
      * This function puts together the data based on prebuilt rules.
      */
-        $data = array(
-            'name' => $_POST['vendor'],
-            'src'    => $_POST['url'],
-        );
 
         foreach( $_POST['actions'] as $k => $v ){
             if( $v == '1' && $k != 'dry_run' ){
@@ -146,15 +151,17 @@ class Sync{
         }
 
         $this->flags['dry_run'] = ( isset( $_POST['actions']['dry_run'] ) );
+        $this->vendor = $_POST['vendor'];
+        $this->url = $_POST['url'];
 
         // do this at the end
-        update_option('msp_'. $_POST['vendor'] .'_last_sync', date('m-d-y'));
+        update_option('msp_'. $this->vendor .'_last_sync', date('m-d-y'));
 
-        $this->sync_with_data( $data );
+        $this->sync_with_data();
         wp_die();
     }
 
-    private function sync_with_data( $vendor ){
+    private function sync_with_data(){
         /**
          * Loops through csv, looks for an ID (variation & simple products) with matching SKU
          * and updates accordingly.
@@ -165,13 +172,12 @@ class Sync{
 
         $count = 0;
 
-        $data = wp_remote_get( $vendor['src'] )['body'];
-        $column = $this->column_mappings[ $vendor['name'] ];
+        $data = wp_remote_get( $this->url )['body'];
 
         if( ! empty( $data ) ){
             foreach( $this->msp_csv_to_array( $data ) as $item ){
-                if( isset( $item[ $column[ 'sku' ] ] ) ){
-                    $id = $this->msp_get_product_id_by_sku( $item[ $column['sku'] ] );
+                if( isset( $item[ $this->get_index_of('sku') ] ) ){
+                    $id = $this->msp_get_product_id_by_sku( $item[ $this->get_index_of('sku') ] );
                     if( ! empty( $id ) ){
 
                         // Loop throught flags, each flag will have a callback to a specific function
@@ -235,16 +241,15 @@ class Sync{
     
     private function msp_update_stock( $id, $item ){
         /**
-         * Checks the ID, sets stock information and puts product on back order if at 0 but has $next_delivery
+         * Prepares an array to pass to update based on stock quantity
          * @param int $id
-         * @param int $stock - Stock of item
-         * @param string $next_delivery - The date the manufacturer expects to get more product.
+         * @param array $item - The row data FROM the csv file pertaining to a specific variation
          */
     
          // NEVER EVER USE WC_PRODUCT object, update post meta!
 
-         $stock = $item[$this->column_mappings['portwest']['stock']];
-         $next_delivery = $item[$this->column_mappings['portwest']['next_delivery']];
+         $stock = $item[ $this->get_index_of('stock') ];
+         $next_delivery = $item[ $this->get_index_of('next_delivery') ];
 
         $updates = array(
             '_manage_stock' => 'yes',
@@ -261,6 +266,26 @@ class Sync{
 
         $this->update( $id, $updates );
     }
+
+    private function get_index_of( $key ){
+        /**
+         * Convienience function for returning the index number based on vendor and key
+         * @param string $key
+         * @return int
+         */
+        return $this->column_mappings[$this->vendor][$key];
+    }
+
+    private function msp_update_dims( $id, $item ){
+        /**
+         * Converts Length, Width, Height and Weight from one unit to another. Example portwest
+         * LxWxH from cm to inches. or KG to LB.
+         * @param int $id
+         * @param array $item - The row data FROM the csv file pertaining to a specific variation
+         */
+        $CM_TO_IN = 0.3937008;
+    }
+
 
     private function update( $id, $updates ){
         /**
