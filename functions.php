@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 
 /*
 * Plugin Name: MSP Product Sync
-* Version: 0.2
+* Version: 0.21
 */
 
 class Sync{
@@ -278,12 +278,27 @@ class Sync{
 
     private function msp_update_dims( $id, $item ){
         /**
-         * Converts Length, Width, Height and Weight from one unit to another. Example portwest
+         * Converts Length, Width, Height from one unit to another. Example portwest
          * LxWxH from cm to inches. or KG to LB.
          * @param int $id
          * @param array $item - The row data FROM the csv file pertaining to a specific variation
          */
         $CM_TO_IN = 0.3937008;
+        $KG_TO_LB = 2.204623;
+        $updates = array();
+
+        if( $this->vendor == 'portwest' ){
+            $updates = array(
+                '_length'=>  round( ($item[ $this->get_index_of('length') ] / 2 * $CM_TO_IN), 1 ),
+                '_width'=>  round( ($item[ $this->get_index_of('width') ] / 2 * $CM_TO_IN), 1 ),
+                '_height'=>  round( ($item[ $this->get_index_of('height') ] / 2 * $CM_TO_IN), 1 ),
+                '_weight'=>  round( ($item[ $this->get_index_of('weight') ] * $KG_TO_LB ), 1),
+            );
+        } else {
+            echo 'Dims / weights only setup for portwest';
+        }
+
+        $this->update( $id, $updates );
     }
 
 
