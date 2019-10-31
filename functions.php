@@ -172,6 +172,7 @@ class Sync{
 
         $data = wp_remote_get( $this->url )['body'];
 
+
         if( ! empty( $data ) ){
             foreach( $this->msp_csv_to_array( $data ) as $item ){
                 if( isset( $item[ $this->get_index_of('sku') ] ) ){
@@ -182,12 +183,14 @@ class Sync{
                         // Perform each function checked off.
 
                         foreach( $this->flags as $k => $v ){
-                            $callback = $this->flags[$k]['callback'];
-
-                            if( ! empty( $callback ) ){
-                                // OPTIMIZE: Optimize $item by looping through $column mappings and only grabbing
-                                // relevant columns of information.
-                                $this->$callback( $id, $item );
+                            if( $k != 'dry_run' ){
+                                $callback = $v['callback'];
+    
+                                if( $v['enabled'] && ! empty( $v['callback'] ) ){
+                                    // OPTIMIZE: Optimize $item by looping through $column mappings and only grabbing
+                                    // relevant columns of information.
+                                    $this->$callback( $id, $item );
+                                }
                             }
                         }
                         // Doesn't particularly mean the product was actually updated.
