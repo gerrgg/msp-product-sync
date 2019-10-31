@@ -27,7 +27,6 @@ class Sync{
                 'callback' => '',
                 'map_our_cost' => false // An extra checkbox for mapping our cost and making determinations.
             ),
-            'dry_run' => false,
     );
 
     public $column_mappings = array(
@@ -51,6 +50,7 @@ class Sync{
 
     public $vendor;
     public $url;
+    public $dry_run;
 
 
     function __construct(){
@@ -143,12 +143,12 @@ class Sync{
      */
 
         foreach( $_POST['actions'] as $k => $v ){
-            if( $v == '1' && $k != 'dry_run' ){
+            if( $v == '1' ){
                 $this->flags[$k]['enabled'] = true;
             }
         }
 
-        $this->flags['dry_run'] = ( isset( $_POST['actions']['dry_run'] ) );
+        $this->dry_run = ( isset( $_POST['actions']['dry_run'] ) );
         $this->vendor = $_POST['vendor'];
         $this->url = $_POST['url'];
 
@@ -183,14 +183,12 @@ class Sync{
                         // Perform each function checked off.
 
                         foreach( $this->flags as $k => $v ){
-                            if( $k != 'dry_run' ){
-                                $callback = $v['callback'];
-    
-                                if( $v['enabled'] && ! empty( $v['callback'] ) ){
-                                    // OPTIMIZE: Optimize $item by looping through $column mappings and only grabbing
-                                    // relevant columns of information.
-                                    $this->$callback( $id, $item );
-                                }
+                            $callback = $v['callback'];
+
+                            if( $v['enabled'] && ! empty( $v['callback'] ) ){
+                                // OPTIMIZE: Optimize $item by looping through $column mappings and only grabbing
+                                // relevant columns of information.
+                                $this->$callback( $id, $item );
                             }
                         }
                         // Doesn't particularly mean the product was actually updated.
@@ -205,7 +203,7 @@ class Sync{
 
         // CONVERT to generate_report(); function
         $time_elapsed_secs = microtime(true) - $start;
-        $is_dry_run = ( $this->flags['dry_run'] ) ? 'Yes' : "No";
+        $is_dry_run = ( $this->dry_run ) ? 'Yes' : "No";
 
         echo '<h2>Report</h2>';
         echo "Dry run:" . $is_dry_run . '<br>';
@@ -312,7 +310,7 @@ class Sync{
         $str = "ID: $id |";
         foreach( $updates as $meta_key => $meta_value ){
             $str .= sprintf( " %s => %s | ",$meta_key, $meta_value );
-            if( false == $this->flags['dry_run'] ){
+            if( false == $this->dry_run ){
                 update_post_meta( $id, $meta_key, $meta_value );
             }
         }
