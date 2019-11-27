@@ -261,7 +261,7 @@ class Sync{
         if( $stock > 0 ){
             $updates['_stock_status'] = 'instock';
             $updates['_backorders'] = 'no';
-        } else {
+        } elseif( $this->vendor != 'helly_hansen' ) {
             $updates['_stock_status'] = 'onbackorder';
             $updates['_backorders'] = 'notify';
             $updates['msp_sync_next_delivery'] = $next_delivery;
