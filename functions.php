@@ -173,7 +173,7 @@ class Sync{
         $data = wp_remote_get( $this->url )['body'];
 
 
-        if( ! empty( $data ) ){
+        if( ! empty( $data ) || is_wp_error( $data ) ){
             foreach( $this->msp_csv_to_array( $data ) as $item ){
                 if( isset( $item[ $this->get_index_of('sku') ] ) ){
                     $id = $this->msp_get_product_id_by_sku( $item[ $this->get_index_of('sku') ] );
