@@ -13,7 +13,7 @@ jQuery( function( $ ){
             let vendor = $(select).val();
             
             if( vendor == 'portwest' ){
-                data.url = 'http://www.portwest.us/downloads/sohUS.csv';
+                data.url = 'http://asm.portwest.us/downloads/sohUS.csv';
                 $(url).val(data.url);
             } else if( vendor == 'helly_hansen' ) {
                 $('.feedback').html("Helly Hansen requires a url. <br>Please go to <a href='https://app.ivendix.com/'>iVendix</a> and enter the url emailed to you; above. Thanks!");

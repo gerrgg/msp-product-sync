@@ -97,7 +97,7 @@ class Sync{
             <h1><span style="color: red;"><?php echo $user->user_firstname ?></span>, I need your help...😬💗</h1>
             <h2 style="color: red;">HELLY HANSEN <b><i>NEEDS</i></b> TO BE SYNCED</h2>
             <h4><b>Last Sync: <?php echo $last_sync?></b></h4>
-            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/checkInventory" target="_blank">  Check Inventory</a></h4>
+            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/login/brands?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdXBhbGlhcyI6bnVsbCwic2lkIjpudWxsLCJ1aWQiOm51bGwsImNtdWlkIjo0NjY5MzAsInV1dSI6IkJFMjc1MzI4LUFGODYtNEFCOC1CQzIwLTYwQUI4NEQwQTJCQSIsImN1cmlkIjpudWxsLCJjaWQiOm51bGwsInR5cGUiOm51bGwsImlzcyI6InN0cy5jZW50ZXJzdG9uZXRlY2guY29tL3Nlc3Npb24iLCJzdWIiOjQ2NjkzMCwiZW1haWwiOiJncmVnQGl3YW50d29ya3dlYXIuY29tIiwibmFtZSI6IkdyZWcgQmFzdGlhbmVsbGkiLCJsYW5nIjoiZW4tVVMiLCJsaWQiOjEsInVuIjoiZ3JlZ2Jhc3QxOTk0IiwiZHMiOiJjc3RtYXN0ZXIiLCJVc2VyX1VVIjoiQkUyNzUzMjgtQUY4Ni00QUI4LUJDMjAtNjBBQjg0RDBBMkJBIiwiUHJvZmlsZV9JRCI6NDY2OTMwLCJWZXJ0aWNhbE5ldF9GbGciOm51bGwsImNmZHMiOm51bGwsImNhdCI6InJ6IiwicmV0IjoiciIsInN0b3JlIjoiciIsIm9yZCI6ImNydWQiLCJzdXAiOiJyIiwicHJkIjoiciIsImludiI6InIiLCJ1c3IiOiJydSIsInJlZyI6InIiLCJhcyI6ImNyIiwiaWF0IjoxNTc0Njk3MTg1LCJleHAiOjE1NzQ3MTE1ODV9.dpbNoENp7Uxd85p2Bi7u082EFFyiFkZWtIiF9WKNsNs&Domain=ivendix&VerticalNet_Flg=true" target="_blank">  Check Inventory</a></h4>
 
             <h1>How do I Sync HELLY HANSEN?</h1>
         <iframe width="400" height="200" src="https://www.youtube.com/embed/zH1hkzSxOLs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
