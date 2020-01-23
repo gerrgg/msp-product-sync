@@ -65,7 +65,7 @@ class Sync{
         add_action( 'portwest_sync_hook', 'portwest_sync_exec' );
 
         if ( ! wp_next_scheduled( 'portwest_sync_hook' ) ) {
-            wp_schedule_event( time(), 'daily', 'portwest_sync_hook' );
+            wp_schedule_event( time(), 'twicedaily', 'portwest_sync_hook' );
         }
 
     }
