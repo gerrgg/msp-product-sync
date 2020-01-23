@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 
 /*
 * Plugin Name: MSP Product Sync
-* Version: 0.21
+* Version: 0.22
 */
 
 class Sync{
