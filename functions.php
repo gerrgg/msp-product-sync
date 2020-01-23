@@ -60,6 +60,14 @@ class Sync{
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_js' ) );
         add_action( 'wp_ajax_msp_admin_sync_vendor', array( $this, 'process' ) );
         add_action( 'admin_post_msp_admin_sync_vendor', array( $this, 'process' ) );
+
+        // setup daily portwest sync
+        add_action( 'portwest_sync_hook', 'portwest_sync_exec' );
+
+        if ( ! wp_next_scheduled( 'portwest_sync_hook' ) ) {
+            wp_schedule_event( time(), 'daily', 'portwest_sync_hook' );
+        }
+
     }
 
     public function admin_js(){
@@ -156,15 +164,18 @@ class Sync{
         update_option('msp_'. $this->vendor .'_last_sync', date('m-d-y'));
 
         $this->sync_with_data();
+
         wp_die();
     }
 
-    private function sync_with_data(){
+    public function sync_with_data(){
         /**
          * Loops through csv, looks for an ID (variation & simple products) with matching SKU
          * and updates accordingly.
          * @param array $vendor - The vendor, data source, and column information
          */
+
+         var_dump( $this );
 
         $start = microtime(true);
 
@@ -173,12 +184,12 @@ class Sync{
         $data = wp_remote_get( $this->url )['body'];
 
 
-        if( ! empty( $data ) || is_wp_error( $data ) ){
+        if( ! empty( $data ) && ! is_wp_error( $data ) ){
             foreach( $this->msp_csv_to_array( $data ) as $item ){
                 if( isset( $item[ $this->get_index_of('sku') ] ) ){
                     $id = $this->msp_get_product_id_by_sku( $item[ $this->get_index_of('sku') ] );
-                    if( ! empty( $id ) ){
 
+                    if( ! empty( $id ) ){
                         // Loop throught flags, each flag will have a callback to a specific function
                         // Perform each function checked off.
 
@@ -339,4 +350,14 @@ function msp_get_availability( $text, $_product ){
     }
 
     return $text;
+}
+
+function portwest_sync_exec(){
+    $sync = new Sync();
+    $sync->flags['stock']['enabled'] = true;
+    $sync->vendor = 'portwest';
+    $sync->url = 'http://asm.portwest.us/downloads/sohUS.csv';
+    $sync->dry_run = false;
+
+    $sync->sync_with_data();
 }
