@@ -46,6 +46,9 @@ class Sync{
             'price' => 10,
             'next_delivery' => 9
         ),
+        'ml-kishigo' => array(
+            'sku' => 0
+        ),
     );
 
     public $vendor;
@@ -66,6 +69,13 @@ class Sync{
 
         if ( ! wp_next_scheduled( 'portwest_sync_hook' ) ) {
             wp_schedule_event( time(), 'twicedaily', 'portwest_sync_hook' );
+        }
+
+        // setup daily portwest sync
+        add_action( 'mlkishigo_sync_hook', 'mlkishigo_sync_exec' );
+
+        if ( ! wp_next_scheduled( 'mlkishigo_sync_hook' ) ) {
+            wp_schedule_event( time(), 'twicedaily', 'mlkishigo_sync_hook' );
         }
 
     }
@@ -104,21 +114,22 @@ class Sync{
         <?php if( $last_sync != $today ) : ?>
             <h1><span style="color: red;"><?php echo $user->user_firstname ?></span>, I need your help...😬💗</h1>
             <h2 style="color: red;">HELLY HANSEN <b><i>NEEDS</i></b> TO BE SYNCED</h2>
-            <h4><b>Last Sync: <?php echo $last_sync?></b></h4>
-            <h4><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/login/brands?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdXBhbGlhcyI6bnVsbCwic2lkIjpudWxsLCJ1aWQiOm51bGwsImNtdWlkIjo0NjY5MzAsInV1dSI6IkJFMjc1MzI4LUFGODYtNEFCOC1CQzIwLTYwQUI4NEQwQTJCQSIsImN1cmlkIjpudWxsLCJjaWQiOm51bGwsInR5cGUiOm51bGwsImlzcyI6InN0cy5jZW50ZXJzdG9uZXRlY2guY29tL3Nlc3Npb24iLCJzdWIiOjQ2NjkzMCwiZW1haWwiOiJncmVnQGl3YW50d29ya3dlYXIuY29tIiwibmFtZSI6IkdyZWcgQmFzdGlhbmVsbGkiLCJsYW5nIjoiZW4tVVMiLCJsaWQiOjEsInVuIjoiZ3JlZ2Jhc3QxOTk0IiwiZHMiOiJjc3RtYXN0ZXIiLCJVc2VyX1VVIjoiQkUyNzUzMjgtQUY4Ni00QUI4LUJDMjAtNjBBQjg0RDBBMkJBIiwiUHJvZmlsZV9JRCI6NDY2OTMwLCJWZXJ0aWNhbE5ldF9GbGciOm51bGwsImNmZHMiOm51bGwsImNhdCI6InJ6IiwicmV0IjoiciIsInN0b3JlIjoiciIsIm9yZCI6ImNydWQiLCJzdXAiOiJyIiwicHJkIjoiciIsImludiI6InIiLCJ1c3IiOiJydSIsInJlZyI6InIiLCJhcyI6ImNyIiwiaWF0IjoxNTc0Njk3MTg1LCJleHAiOjE1NzQ3MTE1ODV9.dpbNoENp7Uxd85p2Bi7u082EFFyiFkZWtIiF9WKNsNs&Domain=ivendix&VerticalNet_Flg=true" target="_blank">  Check Inventory</a></h4>
-
+            <p><b>Last Sync: <?php echo $last_sync?></b></p>
+            <p><b>Check Inventory Link:</b><a href="https://ng.ivendix.com/login/brands?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdXBhbGlhcyI6bnVsbCwic2lkIjpudWxsLCJ1aWQiOm51bGwsImNtdWlkIjo0NjY5MzAsInV1dSI6IkJFMjc1MzI4LUFGODYtNEFCOC1CQzIwLTYwQUI4NEQwQTJCQSIsImN1cmlkIjpudWxsLCJjaWQiOm51bGwsInR5cGUiOm51bGwsImlzcyI6InN0cy5jZW50ZXJzdG9uZXRlY2guY29tL3Nlc3Npb24iLCJzdWIiOjQ2NjkzMCwiZW1haWwiOiJncmVnQGl3YW50d29ya3dlYXIuY29tIiwibmFtZSI6IkdyZWcgQmFzdGlhbmVsbGkiLCJsYW5nIjoiZW4tVVMiLCJsaWQiOjEsInVuIjoiZ3JlZ2Jhc3QxOTk0IiwiZHMiOiJjc3RtYXN0ZXIiLCJVc2VyX1VVIjoiQkUyNzUzMjgtQUY4Ni00QUI4LUJDMjAtNjBBQjg0RDBBMkJBIiwiUHJvZmlsZV9JRCI6NDY2OTMwLCJWZXJ0aWNhbE5ldF9GbGciOm51bGwsImNmZHMiOm51bGwsImNhdCI6InJ6IiwicmV0IjoiciIsInN0b3JlIjoiciIsIm9yZCI6ImNydWQiLCJzdXAiOiJyIiwicHJkIjoiciIsImludiI6InIiLCJ1c3IiOiJydSIsInJlZyI6InIiLCJhcyI6ImNyIiwiaWF0IjoxNTc0Njk3MTg1LCJleHAiOjE1NzQ3MTE1ODV9.dpbNoENp7Uxd85p2Bi7u082EFFyiFkZWtIiF9WKNsNs&Domain=ivendix&VerticalNet_Flg=true" target="_blank">  Check Inventory</a></p>
+            </hr>
             <h1>How do I Sync HELLY HANSEN?</h1>
         <iframe width="400" height="200" src="https://www.youtube.com/embed/zH1hkzSxOLs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <?php endif; ?>
 
         <hr>
+        <h3>Settings</h3>
 
         <p>
             <label>Vendor: </label>
             <select name="vendor" >
                 <option value="helly_hansen">Helly Hansen</option>
                 <option value="portwest">Portwest</option>
-                <option value="radians">Radians</option>
+                <option value="ml-kishigo">ML Kishigo</option>
             </select>
         </p>
 
@@ -136,7 +147,7 @@ class Sync{
             <input type="checkbox" id="dry_run" name="actions[dry_run]" value="1">DRY RUN (<b>nothing changes</b> while checked)
         </p>
 
-        
+        <hr>
 
         <span class="feedback" style="font-weight: 600; font-color: red; font-size: 18px; "></span>
         <input type="hidden" name="action" value="msp_admin_sync_vendor" />
@@ -175,16 +186,20 @@ class Sync{
          * @param array $vendor - The vendor, data source, and column information
          */
 
-         var_dump( $this );
-
+        
         $start = microtime(true);
-
+        
         $count = 0;
-
+        
         $data = wp_remote_get( $this->url )['body'];
-
+        
+        var_dump( $this );
+        echo "<hr/>";
+        $data = $this->format( $data );
+        // var_dump( $data );
 
         if( ! empty( $data ) && ! is_wp_error( $data ) ){
+
             foreach( $this->msp_csv_to_array( $data ) as $item ){
                 if( isset( $item[ $this->get_index_of('sku') ] ) ){
                     $id = $this->msp_get_product_id_by_sku( $item[ $this->get_index_of('sku') ] );
@@ -236,10 +251,31 @@ class Sync{
         return $product_id;
     }
 
+    public function format( $data ){
+        /**
+         * Converts strings into workable arrays based on vendor
+         * @param string $data
+         * @return array $tmp
+         */
+        $tmp = array();
+
+        if( $this->vendor == 'ml-kishigo' ){
+            foreach( explode( '^^^', $data ) as $row ){
+                $arr = explode( '~~', $row );
+                array_push( $tmp, $arr );
+            }
+        }
+
+        return $tmp;
+    }
+
     private function msp_csv_to_array( $data ){
         /**
          * Converts a CSV to an array
          */
+
+        if( is_array( $data ) ) return $data;
+
         $rows = explode("\n", $data);
         $s = array();
     
@@ -259,8 +295,14 @@ class Sync{
     
          // NEVER EVER USE WC_PRODUCT object, update post meta!
 
-         $stock = $item[ $this->get_index_of('stock') ];
-         $next_delivery = $item[ $this->get_index_of('next_delivery') ];
+         if( $this->vendor == 'ml-kishigo' ){
+            // hard coded stock from ML Kishigo - Differant from other vendors
+            $stock = $item[ 2 ] + $item[3];
+         } else {
+             $stock = $item[ $this->get_index_of('stock') ];
+             $next_delivery = $item[ $this->get_index_of('next_delivery') ];
+         }
+
 
         $updates = array(
             '_manage_stock' => 'yes',
@@ -287,7 +329,9 @@ class Sync{
          * @param string $key
          * @return int
          */
-        return $this->column_mappings[$this->vendor][$key];
+        if ( isset( $this->column_mappings[$this->vendor][$key] ) ){
+            return $this->column_mappings[$this->vendor][$key];
+        }
     }
 
     private function msp_update_dims( $id, $item ){
@@ -357,6 +401,16 @@ function portwest_sync_exec(){
     $sync->flags['stock']['enabled'] = true;
     $sync->vendor = 'portwest';
     $sync->url = 'http://asm.portwest.us/downloads/sohUS.csv';
+    $sync->dry_run = false;
+
+    $sync->sync_with_data();
+}
+
+function mlkishigo_sync_exec(){
+    $sync = new Sync();
+    $sync->flags['stock']['enabled'] = true;
+    $sync->vendor = 'ml-kishigo';
+    $sync->url = 'https://mlkishigo.infuseddigital.net/wp-content/plugins/woocommerce-frontend-inventory/sItems.php';
     $sync->dry_run = false;
 
     $sync->sync_with_data();

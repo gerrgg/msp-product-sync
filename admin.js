@@ -17,6 +17,9 @@ jQuery( function( $ ){
                 $(url).val(data.url);
             } else if( vendor == 'helly_hansen' ) {
                 $('.feedback').html("Helly Hansen requires a url. <br>Please go to <a href='https://app.ivendix.com/'>iVendix</a> and enter the url emailed to you; above. Thanks!");
+            } else if ( vendor == 'ml-kishigo' ) {
+                data.url = 'https://mlkishigo.infuseddigital.net/wp-content/plugins/woocommerce-frontend-inventory/sItems.php';
+                $(url).val(data.url);
             }
             
         }).on( 'click', '#dry_run', function( e ){
