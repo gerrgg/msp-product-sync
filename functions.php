@@ -303,6 +303,7 @@ class Sync{
              $next_delivery = $item[ $this->get_index_of('next_delivery') ];
          }
 
+         if( $stock < 0 ) $stock = 0;
 
         $updates = array(
             '_manage_stock' => 'yes',
