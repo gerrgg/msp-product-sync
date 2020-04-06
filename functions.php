@@ -147,15 +147,14 @@ class Sync{
             <input type="checkbox" id="dry_run" name="actions[dry_run]" value="1">DRY RUN (<b>nothing changes</b> while checked)
         </p>
 
-        <hr>
-
         <span class="feedback" style="font-weight: 600; font-color: red; font-size: 18px; "></span>
         <input type="hidden" name="action" value="msp_admin_sync_vendor" />
         <button id="submit_update_vendor" type="submit" class="button button-primary" style="margin-top: 1rem;">Submit Vendor!</button>
     </form>
     <?php
     }
-}
+
+
 
     public function process(){
     /**
