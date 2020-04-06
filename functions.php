@@ -122,7 +122,7 @@ class Sync{
         <?php endif; ?>
 
         <hr>
-        <h3>Settings</h3>
+        <h4>Settings</h4>
 
         <p>
             <label>Vendor: </label>
@@ -155,6 +155,7 @@ class Sync{
     </form>
     <?php
     }
+}
 
     public function process(){
     /**
