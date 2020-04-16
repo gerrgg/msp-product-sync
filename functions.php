@@ -3,7 +3,8 @@ defined( 'ABSPATH' ) || exit;
 
 /*
 * Plugin Name: MSP Product Sync
-* Version: 0.22
+* Description: Sync your products with your vendors stock and never worry again.
+* Version: 0.23
 */
 
 class Sync{
@@ -264,7 +265,9 @@ class Sync{
                 $arr = explode( '~~', $row );
                 array_push( $tmp, $arr );
             }
-        }
+        } else {
+			$tmp = $data;
+		}
 
         return $tmp;
     }
@@ -308,18 +311,10 @@ class Sync{
         $updates = array(
             '_manage_stock' => 'yes',
             '_stock' => $stock,
+			'_backorders' => 'no',
         );
     
-        if( $stock > 0 ){
-            $updates['_stock_status'] = 'instock';
-            $updates['_backorders'] = 'no';
-        } else {    
-            if( ! empty( $next_delivery ) && $this->vendor != 'helly_hansen' ){
-                $updates['_stock_status'] = 'onbackorder';
-                $updates['_backorders'] = 'notify';
-                $updates['msp_sync_next_delivery'] = $next_delivery;
-            } 
-        }
+        $updates['_stock_status'] = ( $stock > 0 ) ? 'instock' : 'outofstock';
 
         $this->update( $id, $updates );
     }
