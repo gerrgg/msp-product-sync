@@ -72,13 +72,6 @@ class Sync{
             wp_schedule_event( time(), 'twicedaily', 'portwest_sync_hook' );
         }
 
-        // setup daily portwest sync
-        add_action( 'mlkishigo_sync_hook', 'mlkishigo_sync_exec' );
-
-        if ( ! wp_next_scheduled( 'mlkishigo_sync_hook' ) ) {
-            wp_schedule_event( time(), 'twicedaily', 'mlkishigo_sync_hook' );
-        }
-
     }
 
     public function admin_js(){
@@ -194,7 +187,6 @@ class Sync{
         
         $data = wp_remote_get( $this->url )['body'];
         
-        var_dump( $this );
         echo "<hr/>";
         $data = $this->format( $data );
         // var_dump( $data );
@@ -397,16 +389,6 @@ function portwest_sync_exec(){
     $sync->flags['stock']['enabled'] = true;
     $sync->vendor = 'portwest';
     $sync->url = 'http://asm.portwest.us/downloads/sohUS.csv';
-    $sync->dry_run = false;
-
-    $sync->sync_with_data();
-}
-
-function mlkishigo_sync_exec(){
-    $sync = new Sync();
-    $sync->flags['stock']['enabled'] = true;
-    $sync->vendor = 'ml-kishigo';
-    $sync->url = 'https://mlkishigo.infuseddigital.net/wp-content/plugins/woocommerce-frontend-inventory/sItems.php';
     $sync->dry_run = false;
 
     $sync->sync_with_data();
