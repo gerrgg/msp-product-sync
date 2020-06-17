@@ -185,11 +185,15 @@ class Sync{
         
         $count = 0;
         
-        $data = wp_remote_get( $this->url )['body'];
+        $data = wp_remote_get( $this->url );
+
+        // check for failure - Cannot use object of type WP_Error as array
+        if( ! isset( $data['body'] ) ) return;
         
         echo "<hr/>";
-        $data = $this->format( $data );
-        // var_dump( $data );
+
+        // Package data
+        $data = $this->format( $data['body'] );
 
         if( ! empty( $data ) && ! is_wp_error( $data ) ){
 
